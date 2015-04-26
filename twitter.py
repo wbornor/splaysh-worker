@@ -1,58 +1,47 @@
 import os, sys, time
 
-sys.path.append(os.path.join(os.getcwd(), '../..'))
-sys.path.append(os.getcwd())
-os.environ['DJANGO_SETTINGS_MODULE'] = 'splaysh.settings'
-sys.path.pop()
-
-from splaysh import settings
-from django.db import models
-from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
-from splaysh.nut.models import *
-
 import urllib
-from splaysh.lib import simplejson as json
+import tweepy
+import simplejson
+import boto
+from boto.s3.connection import S3Connection
+import creds
 
-def parse(nut_id, url, user):
-    print(nut_id)
+def download():
+    auth = tweepy.OAuthHandler(creds.twitter["consumer_key"], creds.twitter["consumer_secret"])
+    auth.set_access_token(creds.twitter["access_token"], creds.twitter["access_token_secret"])
+
+    api = tweepy.API(auth)
+
+    tweets = api.user_timeline()
+    for tweet in tweets:
+        print tweet.text
+
+def persist(json):
+    s3 = S3Connection(creds.aws["aws_access_key_id"], creds.aws["aws_secret_access_key"])
+    from boto.s3.key import Key
+    bucket = s3.get_bucket("splaysh.com")
+    k = Key(bucket)
+    k.key = 'splayshdb-test.js'
+    print k.get_contents_as_string()
+
+def main():
     now = time.localtime()
-    me = User.objects.get(id=1)
-    
-    response = urllib.urlopen(url)
-    html = response.read()
-    results = json.loads(html)['results']
 
-    for r in results:
-            nut = Nut.objects.get(id=nut_id)
-            
-            id = r['id']
-            tweetUrl = 'http://twitter.com/#!/'+user+'/status/'+str(id)
+    #TODO get payload from service
+    download()
+    #response = urllib.urlopen(url)
+    #html = response.read()
+    #results = simplejson.loads(html)['results']
 
-            try:
-                existing = Entry.objects.get(nut__id=nut.id, url=tweetUrl)
-                continue
-            except ObjectDoesNotExist, d:
-                pass
-            
-            nentry = Entry(user=me, 
-                   nut=nut,
-                   title = '@'+user,
-                   content = r['text'],
-                   is_public = True,
-                   url=tweetUrl)
-            nentry.save()    
-    
-            nentry.create_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-            #nentry.save() 
-            print(user, id, tweetUrl, r['text'], r['created_at'])
-                
-            
+    #TODO transform json
+    #simplejson.
+
+    #TODO put json to S3
+
+    #persist('hi')
+
+    print "done"
 
 if __name__ == '__main__':
-    feeds = [(settings.ANALNUT, 'http://search.twitter.com/search.json?q=from%3Aanalnut', 'analnut'), 
-            ]
-    
-    for feed in feeds:
-        parse(feed[0], feed[1], feed[2])
-    
+    main()
