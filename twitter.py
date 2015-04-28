@@ -5,6 +5,8 @@ import uuid
 import tweepy
 import simplejson
 from boto.s3.connection import S3Connection
+from boto.s3.key import Key
+from boto.exception import S3ResponseError
 import creds
 
 
@@ -30,7 +32,6 @@ Example splayshdb-json format
         "content" : "",
         "is_public" : 1,
         "url" : "http://www.flickr.com/groups/kaprigs/pool/with/8061790889/#photo_8061790889"
-        "twitter::media': #<list of twitter media meta data>
     },
 ]
 '''
@@ -44,6 +45,7 @@ def transform(tweets):
         entry = {
             'id': str(uuid.uuid4()),
             'nut_id': 1,
+            'nut_type': 'TALKNUT',
             'create_date': str(created),
             'content': tweet.text,
             'is_public': 1,
@@ -61,33 +63,44 @@ def transform(tweets):
         entry['tweet::author::profile_image_url_https'] = tweet.author.profile_image_url_https
 
         entries.append(entry)
-    return simplejson.dumps(entries)
+    return entries
 
 
 def persist(json):
     s3 = S3Connection(creds.aws["aws_access_key_id"], creds.aws["aws_secret_access_key"])
-    from boto.s3.key import Key
 
     # TODO - map out directory layout
-    # s3://splaysh.com/splayshdb/ # head - lists past n entries
+    # s3://splaysh.com/splayshdb/head.json # head - lists past n entries
     # s3://splaysh.com/splayshdb/talknut/ # head - lists past n talknut entries
     # s3://splaysh.com/splayshdb/talknut/2015/ # lists all talknut entries in 2015
+    # s3://splaysh.com/splayshdb/talknut/2015/2015-04-27.json # many files YYYY-MM-DD.json
     # s3://splaysh.com/splayshdb/budnut/
     # s3://splaysh.com/splayshdb/budnut/2015/
     bucket = s3.get_bucket("splaysh.com")
-    k = Key(bucket)
-    k.key = 'splayshdb-test.js'
-    print k.get_contents_as_string()
 
+    #TODO - write to head file
+
+    #overwrite talknut head file
+    k = Key(bucket)
+    k.key = 'splayshdb/talknut/head.json'
+    try:
+        head = simplejson.loads(k.get_contents_as_string())
+    except S3ResponseError:
+        # head is missing
+        head = []
+
+    #TODO - only write on change
+
+    k.set_contents_from_string(simplejson.dumps(json))
+
+    #TODO - overwrite talknut year files
 
 def main():
     now = time.localtime()
 
     tweets = download()
     json = transform(tweets)
-
-    # TODO put json to S3
-    # persist(json)
+    persist(json)
 
     print "done"
 
