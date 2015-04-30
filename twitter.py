@@ -78,22 +78,48 @@ def persist(json):
     # s3://splaysh.com/splayshdb/budnut/2015/
     bucket = s3.get_bucket("splaysh.com")
 
-    #TODO - write to head file
+    #overwrite talknut head file
+    putNutHead(json, bucket, 'splayshdb/talknut/head.json')
 
+    #prepend additions to year-month files
+    prependAdditions(json, bucket, 'splayshdb/talknut/2015-04.json')
+
+
+
+def putNutHead(json, bucket, key):
     #overwrite talknut head file
     k = Key(bucket)
-    k.key = 'splayshdb/talknut/head.json'
-    try:
-        head = simplejson.loads(k.get_contents_as_string())
-    except S3ResponseError:
-        # head is missing
-        head = []
-
-    #TODO - only write on change
+    k.key = key
 
     k.set_contents_from_string(simplejson.dumps(json))
 
-    #TODO - overwrite talknut year files
+
+
+
+def prependAdditions(json_entries, bucket_name, key_name):
+    k = Key(bucket_name)
+    k.key = key_name
+    try:
+        asis = simplejson.loads(k.get_contents_as_string())
+    except S3ResponseError:
+        # asis is missing
+        asis = []
+
+    tobe = filter(lambda e: isNewEntry(e, asis), json_entries)
+    tobe = tobe + asis
+    k.set_contents_from_string(simplejson.dumps(tobe))
+
+    return tobe
+
+def isNewEntry(entry, asis):
+    if asis == None or asis == []:
+        return True
+
+    for a in asis:
+        if entry.id == a.id:
+            return False
+    return True
+
 
 def main():
     now = time.localtime()
