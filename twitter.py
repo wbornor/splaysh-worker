@@ -50,6 +50,7 @@ def transform(tweets):
             'content': tweet.text,
             'is_public': 1,
             'url': 'https://twitter.com/wbornor/status/%s' % tweet.id_str,
+            'title': '@wbornor',
         }
 
         for e in tweet.entities:
@@ -130,6 +131,8 @@ def main():
 
     print "done"
 
+def handler(event, context):
+    main()
 
 if __name__ == '__main__':
     main()
