@@ -7,6 +7,8 @@ import simplejson
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from boto.exception import S3ResponseError
+import boto.dynamodb
+
 import creds
 
 
@@ -65,6 +67,23 @@ def transform(tweets):
 
         entries.append(entry)
     return entries
+
+
+def persist_dynamo(json):
+    conn = boto.dynamodb.connect_to_region(
+        'us-east-1',
+        aws_access_key_id=creds.aws["aws_access_key_id"],
+        aws_secret_access_key=creds.aws["aws_secret_access_key"])
+    print "tables: %s" % conn.list_tables()
+    table = conn.get_table('splayshdb')
+
+    for entry in json:
+        item = table.new_item(
+            hash_key=entry["id"],
+            attrs=entry
+        )
+        item.put()
+
 
 
 def persist(json):
@@ -127,7 +146,7 @@ def main():
 
     tweets = download()
     json = transform(tweets)
-    persist(json)
+    persist_dynamo(json)
 
     print "done"
 
