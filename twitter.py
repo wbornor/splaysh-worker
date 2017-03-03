@@ -1,13 +1,13 @@
 import time
 from datetime import datetime
 
-import hashlib
 import tweepy
 import simplejson
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from boto.exception import S3ResponseError
 import boto.dynamodb
+import uuid
 
 import creds
 
@@ -53,7 +53,7 @@ def transform(tweets):
             'url': 'https://twitter.com/wbornor/status/%s' % tweet.id_str,
             'title': '@wbornor',
         }
-        entry["id"] = hashlib.sha256(entry['url']+entry['create_date']).hexdigest()
+        entry["id"] = 'talknut.' + str(uuid.uuid4())
 
         for e in tweet.entities:
             if tweet.entities[e]:
@@ -87,7 +87,7 @@ def persist_dynamo(json):
         aws_access_key_id=creds.aws["aws_access_key_id"],
         aws_secret_access_key=creds.aws["aws_secret_access_key"])
     print "tables: %s" % conn.list_tables()
-    table = conn.get_table('splayshdb.prd.entry')
+    table = conn.get_table('splayshdb.dev.items')
 
     for entry in json:
         item = table.new_item(
