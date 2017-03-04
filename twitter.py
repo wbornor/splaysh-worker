@@ -1,16 +1,16 @@
 import time
 from datetime import datetime
 
-import uuid
+import hashlib
 import tweepy
 import simplejson
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from boto.exception import S3ResponseError
 import boto.dynamodb
+import time
 
 import creds
-
 
 def download():
     auth = tweepy.OAuthHandler(creds.twitter["consumer_key"], creds.twitter["consumer_secret"])
@@ -42,10 +42,9 @@ Example splayshdb-json format
 def transform(tweets):
     entries = []
     for tweet in tweets:
-        print tweet.text
+        print "tweet.text: " + tweet.text
         created = tweet.created_at or datetime.now()
         entry = {
-            'id': str(uuid.uuid4()),
             'nut_id': 1,
             'nut_type': 'TALKNUT',
             'create_date': str(created),
@@ -54,20 +53,38 @@ def transform(tweets):
             'url': 'https://twitter.com/wbornor/status/%s' % tweet.id_str,
             'title': '@wbornor',
         }
+        entry["id"] = 'talknut.' + hashlib.sha256(entry['url']+entry['create_date']).hexdigest()
+
+        entry['tweet::json'] = simplejson.dumps(tweet._json)
 
         for e in tweet.entities:
-            entry['tweet::entities::' + e] = tweet.entities[e]
+            if tweet.entities[e]:
+                try :
+                    entry['tweet::entities::' + e] = simplejson.dumps(tweet.entities[e])
+                except :
+                    print('simplejson fail:' + tweet.entities[e])
 
-        entry['tweet::id_str'] = tweet.id_str
-        entry['tweet::created_at'] = str(tweet.created_at)
-        entry['tweet::author::id_str'] = tweet.author.id_str
-        entry['tweet::author::screen_name'] = tweet.author.screen_name
-        entry['tweet::author::name'] = tweet.author.name
-        entry['tweet::author::profile_image_url_https'] = tweet.author.profile_image_url_https
+        if tweet.id_str:
+            entry['tweet::id_str'] = tweet.id_str
+
+        if tweet.created_at:
+            entry['tweet::created_at'] = str(tweet.created_at)
+
+        if tweet.author and tweet.author.id_str:
+            entry['tweet::author::id_str'] = tweet.author.id_str
+
+        if tweet.author and tweet.author.screen_name:
+            entry['tweet::author::screen_name'] = tweet.author.screen_name
+
+        if tweet.author and tweet.author.name:
+            entry['tweet::author::name'] = tweet.author.name
+
+        if tweet.author and tweet.author.profile_image_url_https:
+            entry['tweet::author::profile_image_url_https'] = tweet.author.profile_image_url_https
 
         entries.append(entry)
-    return entries
 
+    return entries
 
 def persist_dynamo(json):
     conn = boto.dynamodb.connect_to_region(
@@ -75,14 +92,17 @@ def persist_dynamo(json):
         aws_access_key_id=creds.aws["aws_access_key_id"],
         aws_secret_access_key=creds.aws["aws_secret_access_key"])
     print "tables: %s" % conn.list_tables()
-    table = conn.get_table('splayshdb')
+    table = conn.get_table(creds.aws['itemsTable'])
 
     for entry in json:
         item = table.new_item(
             hash_key=entry["id"],
+            range_key=entry["create_date"],
             attrs=entry
         )
         item.put()
+        print str(item)
+        time.sleep(1)
 
 
 
