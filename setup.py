@@ -17,5 +17,5 @@ setup(
     license = "Apache2",
     keywords = "splaysh",
     url = "https://github.com/wbornor/splaysh-worker",
-    #packages=['boto', 'tweepy', 'simplejson', ]
+    packages=['boto', 'tweepy', 'simplejson', ]
 )

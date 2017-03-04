@@ -7,8 +7,9 @@ set -x
 cd ~/git/splaysh-worker/
 zip -r /tmp/splaysh-worker.zip . --exclude .git/\* .idea\*
 
-#cd /usr/local/lib/python2.7/site-packages/
-cd /usr/local/Cellar/python/2.7.9/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages
+pip install tweepy boto simplejson -t /tmp/splaysh-worker/
+
+cd /tmp/splaysh-worker/
 zip -r  -u /tmp/splaysh-worker.zip .
 
 #deploy s3

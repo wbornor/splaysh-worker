@@ -92,6 +92,7 @@ def persist_dynamo(json):
         aws_access_key_id=creds.aws["aws_access_key_id"],
         aws_secret_access_key=creds.aws["aws_secret_access_key"])
     print "tables: %s" % conn.list_tables()
+    print "itemsTable: " + creds.aws['itemsTable']
     table = conn.get_table(creds.aws['itemsTable'])
 
     for entry in json:
