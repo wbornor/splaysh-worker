@@ -12,7 +12,6 @@ import time
 
 import creds
 
-
 def download():
     auth = tweepy.OAuthHandler(creds.twitter["consumer_key"], creds.twitter["consumer_secret"])
     auth.set_access_token(creds.twitter["access_token"], creds.twitter["access_token_secret"])
@@ -93,7 +92,7 @@ def persist_dynamo(json):
         aws_access_key_id=creds.aws["aws_access_key_id"],
         aws_secret_access_key=creds.aws["aws_secret_access_key"])
     print "tables: %s" % conn.list_tables()
-    table = conn.get_table('splayshdb.dev.items')
+    table = conn.get_table(creds.aws['itemsTable'])
 
     for entry in json:
         item = table.new_item(
