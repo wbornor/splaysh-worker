@@ -1,13 +1,14 @@
 import time
 from datetime import datetime
 
+import hashlib
 import tweepy
 import simplejson
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from boto.exception import S3ResponseError
 import boto.dynamodb
-import uuid
+import time
 
 import creds
 
@@ -42,7 +43,7 @@ Example splayshdb-json format
 def transform(tweets):
     entries = []
     for tweet in tweets:
-        print tweet.text
+        print "tweet.text: " + tweet.text
         created = tweet.created_at or datetime.now()
         entry = {
             'nut_id': 1,
@@ -53,11 +54,16 @@ def transform(tweets):
             'url': 'https://twitter.com/wbornor/status/%s' % tweet.id_str,
             'title': '@wbornor',
         }
-        entry["id"] = 'talknut.' + str(uuid.uuid4())
+        entry["id"] = 'talknut.' + hashlib.sha256(entry['url']+entry['create_date']).hexdigest()
+
+        entry['tweet::json'] = simplejson.dumps(tweet._json)
 
         for e in tweet.entities:
             if tweet.entities[e]:
-                entry['tweet::entities::' + e] = simplejson.dumps(tweet.entities[e])
+                try :
+                    entry['tweet::entities::' + e] = simplejson.dumps(tweet.entities[e])
+                except :
+                    print('simplejson fail:' + tweet.entities[e])
 
         if tweet.id_str:
             entry['tweet::id_str'] = tweet.id_str
@@ -96,6 +102,8 @@ def persist_dynamo(json):
             attrs=entry
         )
         item.put()
+        print str(item)
+        time.sleep(1)
 
 
 
