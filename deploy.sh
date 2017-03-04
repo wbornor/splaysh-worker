@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
+set -e
+set -x
 
 #build package
 
 cd ~/git/splaysh-worker/
 zip -r /tmp/splaysh-worker.zip . --exclude .git/\* .idea\*
 
-cd /tmp/splaysh-worker/lib/python2.7/site-packages/
+#cd /usr/local/lib/python2.7/site-packages/
+cd /usr/local/Cellar/python/2.7.9/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages
 zip -r  -u /tmp/splaysh-worker.zip .
 
 #deploy s3
