@@ -2,9 +2,6 @@
 
 #build package
 
-#cd /tmp/splaysh-worker;
-#zip -r ../splaysh-worker.zip .
-
 cd ~/git/splaysh-worker/
 zip -r /tmp/splaysh-worker.zip . --exclude .git/\* .idea\*
 

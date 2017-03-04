@@ -101,7 +101,7 @@ def persist_dynamo(json):
             attrs=entry
         )
         item.put()
-        print str(item)
+        print 'put: ' + str(item)
         time.sleep(1)
 
 
