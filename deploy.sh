@@ -3,6 +3,7 @@ set -e
 set -x
 
 #build package
+rm /tmp/splaysh-worker.zip
 
 cd ~/git/splaysh-worker/
 zip -r /tmp/splaysh-worker.zip . --exclude .git/\* .idea\*
