@@ -1,6 +1,7 @@
-import time, hashlib
+import hashlib
 from datetime import datetime
-import flickrapi, creds, persister
+import creds, persister
+import flickrapi
 
 def download():
 
@@ -26,6 +27,7 @@ def transform(photos):
             'nut_type': 'PHOTONUT',
             'create_date': str(created),
             'is_photoset': False,
+            'is_photo': True,
             'content': photo.get('id'),
             'is_public': photo.get('ispublic'),
             'thumb_url': getThumbnailUrl(photo.get('server'), photo.get('id'), photo.get('secret')),
