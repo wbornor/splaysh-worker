@@ -8,14 +8,23 @@ from setuptools import setup
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
 setup(
-    name = "splaysh-worker",
-    version = "0.0.1",
-    author = "Wesley Bornor",
-    author_email = "wbornor@gmail.com",
-    description = ("Periodically sync splaysh feeds"),
-    license = "Apache2",
-    keywords = "splaysh",
-    url = "https://github.com/wbornor/splaysh-worker",
-    packages=['boto', 'tweepy', 'simplejson', ]
+    name="splaysh-worker",
+    version="0.0.1",
+    author="Wesley Bornor",
+    author_email="wbornor@gmail.com",
+    description="Periodically sync splaysh feeds",
+    license="Apache2",
+    keywords="splaysh",
+    url="https://github.com/wbornor/splaysh-worker",
+    packages=[
+        'boto',
+        'tweepy',
+        'simplejson',
+        'flickrapi',
+        'feedparser',
+        'minifb',
+        'python-amazon-product-api-0.2.8'
+    ]
 )
