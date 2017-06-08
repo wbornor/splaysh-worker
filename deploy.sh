@@ -14,7 +14,10 @@ zip -r  -u /tmp/splaysh-worker.zip .
 
 #deploy s3
 
-/usr/local/bin/aws --profile personal s3 cp /tmp/splaysh-worker.zip s3://splaysh-private-artifacts/splaysh-worker/;
+aws s3 cp
+--profile personal \
+/tmp/splaysh-worker.zip \
+s3://splaysh-private-artifacts/splaysh-worker/;
 
 
 #cycle lambda
